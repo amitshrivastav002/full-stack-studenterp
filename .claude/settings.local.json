@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw -o -q compile)",
+      "Read(//c/Users/HARSH KUMAR/.m2/wrapper/dists/**)",
+      "Read(//c/Users/HARSH KUMAR/.m2/**)"
+    ]
+  }
+}
