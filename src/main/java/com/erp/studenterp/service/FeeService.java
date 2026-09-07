@@ -286,6 +286,8 @@ public FeePaymentResponse makePayment(
                 .findFirst()
                 .orElse(null);
 
+        // Assigning the same structure twice (e.g. re-running bulk enrolment)
+        // is a no-op rather than an error, so callers don't have to check first.
         if (existingFee != null) {
             return toStudentFeeResponse(existingFee);
         }

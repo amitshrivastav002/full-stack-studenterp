@@ -5,7 +5,8 @@ import type {
   ExamSubjectResponse, FacultyAccountRequest, FacultyRequest, FacultyResponse,
   FacultySubjectRequest, FacultySubjectResponse, FeePaymentRequest,
   FeePaymentResponse, FeeReceiptResponse, FeeStructureRequest,
-  FeeStructureResponse, LeaveDecisionRequest, LeaveStatus, LoginRequest,
+  FeeStructureResponse, GoogleLoginRequest, LeaveDecisionRequest,
+  LeaveStatus, LoginRequest,
   LoginResponse, Page, RazorpayOrderRequest, RazorpayOrderResponse,
   RazorpayOrderSummaryResponse, RazorpayPaymentVerificationRequest,
   RazorpayStatusResponse, RegisterRequest, SignupRequest,
@@ -41,6 +42,9 @@ export const auth = {
   /** Public self-service. Always creates a STUDENT account. */
   signup: (body: SignupRequest) =>
     api.post<MessageResponse>('/api/auth/signup', body),
+  /** Public. Creates a STUDENT account on first sign-in, same as signup. */
+  google: (body: GoogleLoginRequest) =>
+    api.post<LoginResponse>('/api/auth/google', body),
 };
 
 export const students = {

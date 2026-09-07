@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { auth as authApi } from '../../api/endpoints';
-import { ROLES } from '../../api/types';
 import type { Role } from '../../api/types';
 import { errorMessage } from '../../lib/useAsync';
 import {
-  Alert, Button, Card, Field, Input, PageHeader, Select,
+  Alert, Button, Card, Field, Input, PageHeader,
 } from '../../components/ui';
-import { titleCase } from '../../lib/format';
 
 /**
  * Creates portal logins. Student and faculty logins are normally created along
@@ -17,7 +15,7 @@ export default function AdminUsers() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>('ADMIN');
+  const role: Role = 'ADMIN';
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
@@ -86,17 +84,11 @@ export default function AdminUsers() {
             />
           </Field>
 
-          <Field
-            label="Role"
-            required
-            hint="A student or faculty login must also be linked to their record."
-          >
-            <Select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{titleCase(r)}</option>
-              ))}
-            </Select>
-          </Field>
+          <p className="text-sm text-slate-400">
+            This creates an administrator login. Student and faculty logins are
+            created from their Student/Faculty record instead, so they stay linked
+            to it.
+          </p>
 
           <Button type="submit" disabled={busy}>
             {busy ? 'Creating…' : 'Create account'}

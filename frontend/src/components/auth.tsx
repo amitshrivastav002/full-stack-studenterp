@@ -1,6 +1,87 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (parent: HTMLElement, options: Record<string, string>) => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
+
+function loadGoogleScript(): Promise<void> {
+  if (window.google?.accounts?.id) return Promise.resolve();
+
+  const existing = document.querySelector<HTMLScriptElement>(`script[src="${GOOGLE_SCRIPT_SRC}"]`);
+  if (existing) {
+    return new Promise((resolve) => existing.addEventListener('load', () => resolve(), { once: true }));
+  }
+
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = GOOGLE_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener('load', () => resolve(), { once: true });
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Renders Google's own "Sign in with Google" button. `onCredential` receives the
+ * ID token for the backend to verify — this component never inspects it itself.
+ */
+export function GoogleButton({ onCredential }: { onCredential: (idToken: string) => void }) {
+  const container = useRef<HTMLDivElement>(null);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+  useEffect(() => {
+    if (!clientId || !container.current) return;
+    let cancelled = false;
+
+    loadGoogleScript().then(() => {
+      if (cancelled || !container.current || !window.google) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (response) => onCredential(response.credential),
+      });
+      window.google.accounts.id.renderButton(container.current, {
+        theme: 'outline',
+        size: 'large',
+        shape: 'pill',
+        width: '150',
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, [clientId, onCredential]);
+
+  if (!clientId) {
+    return (
+      <button
+        type="button"
+        disabled
+        title="Google sign-in is not configured for this deployment"
+        className="flex h-12 cursor-not-allowed items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-medium text-slate-400 opacity-60"
+      >
+        Google
+      </button>
+    );
+  }
+
+  return <div ref={container} className="flex h-12 items-center justify-center overflow-hidden" />;
+}
+
 /**
  * The shared visual shell for the signed-out screens (sign in, sign up).
  * Kept in one place so both pages animate identically.

@@ -52,6 +52,7 @@ export interface LoginResponse {
   token: string;
   role: Role;
   fullName: string;
+  email: string;
 }
 
 export interface RegisterRequest {
@@ -66,6 +67,11 @@ export interface SignupRequest {
   fullName: string;
   email: string;
   password: string;
+}
+
+/** The ID token Google Identity Services hands back after sign-in. */
+export interface GoogleLoginRequest {
+  idToken: string;
 }
 
 // ---------------- student ----------------

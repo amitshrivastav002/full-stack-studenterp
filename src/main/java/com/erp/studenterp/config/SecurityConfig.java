@@ -97,6 +97,7 @@ public class SecurityConfig {
                         // role, stays an admin action.
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/signup").permitAll()
+                        .requestMatchers("/api/auth/google").permitAll()
                         .requestMatchers("/api/auth/register").hasRole("ADMIN")
 
                         // Razorpay signs its callbacks with the shared webhook

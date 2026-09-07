@@ -240,6 +240,9 @@ function StudentFeesTab() {
   );
 
   const structures = useAsync(() => feesApi.structures(), []);
+  const eligibleStructures = (structures.data ?? []).filter(
+    (s) => s.courseId === student?.courseId && s.semester === student?.semester,
+  );
 
   const [assigning, setAssigning] = useState(false);
   const [structureId, setStructureId] = useState(0);
@@ -331,7 +334,7 @@ function StudentFeesTab() {
                     disabled={structures.loading}
                   >
                     <option value={0} disabled>Select a structure</option>
-                    {(structures.data ?? []).map((s) => (
+                    {eligibleStructures.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.courseName} · Sem {s.semester} · {titleCase(s.feeType)} ·{' '}
                         {money(s.amount)} · {s.academicYear}
@@ -344,6 +347,11 @@ function StudentFeesTab() {
                 {assigning ? 'Assigning…' : 'Assign fee'}
               </Button>
             </form>
+            {!structures.loading && eligibleStructures.length === 0 && (
+              <p className="mt-2 text-sm text-slate-500">
+                No fee structure matches this student&apos;s course and semester.
+              </p>
+            )}
           </Card>
 
           <Card title="Assigned fees">

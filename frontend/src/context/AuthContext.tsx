@@ -13,6 +13,7 @@ interface Session {
 interface AuthValue {
   session: Session | null;
   login: (body: LoginRequest, remember?: boolean) => Promise<Session>;
+  loginWithGoogle: (idToken: string) => Promise<Session>;
   logout: () => void;
 }
 
@@ -46,15 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('erp:unauthorized', logout);
   }, [logout]);
 
-  /** `remember` false keeps the session in this tab only. */
-  const login = useCallback(async (body: LoginRequest, remember = true) => {
-    const res = await authApi.login(body);
+  /** Shared by every sign-in method: stores the token, then the session it names. */
+  const applySession = useCallback((res: { token: string; role: Role; fullName: string; email: string }, remember: boolean) => {
     setToken(res.token, remember);
-    const next: Session = {
-      role: res.role,
-      fullName: res.fullName,
-      email: body.email,
-    };
+    const next: Session = { role: res.role, fullName: res.fullName, email: res.email };
     localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     (remember ? localStorage : sessionStorage)
@@ -63,7 +59,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return next;
   }, []);
 
-  const value = useMemo(() => ({ session, login, logout }), [session, login, logout]);
+  /** `remember` false keeps the session in this tab only. */
+  const login = useCallback(async (body: LoginRequest, remember = true) => {
+    const res = await authApi.login(body);
+    return applySession(res, remember);
+  }, [applySession]);
+
+  /**
+   * Signs in with the ID token Google Identity Services hands back. The backend
+   * creates a STUDENT account on first sign-in, same as the sign-up form does.
+   */
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const res = await authApi.google({ idToken });
+    return applySession(res, true);
+  }, [applySession]);
+
+  const value = useMemo(
+    () => ({ session, login, loginWithGoogle, logout }),
+    [session, login, loginWithGoogle, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

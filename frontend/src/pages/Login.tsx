@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import type { FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { HOME_FOR_ROLE, useAuth } from '../context/AuthContext';
 import {
-  AuthScene, BrandMark, FloatingInput, FormAlert, PasswordToggle,
+  AuthScene, BrandMark, FloatingInput, FormAlert, GoogleButton, PasswordToggle,
   Stagger, SubmitButton, prefersReducedMotion,
 } from '../components/auth';
 
 type Phase = 'idle' | 'busy' | 'success';
 
 export default function Login() {
-  const { session, login } = useAuth();
+  const { session, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -68,6 +68,25 @@ export default function Login() {
       setPhase('idle');
       reject(err instanceof ApiError
         ? (err.message || 'Invalid email or password.')
+        : 'Unable to reach the server. Is the backend running on port 8080?');
+    }
+  }
+
+  async function handleGoogleCredential(idToken: string) {
+    if (phase !== 'idle') return;
+    setError('');
+    setNote('');
+    setPhase('busy');
+    try {
+      const account = await loginWithGoogle(idToken);
+      setPhase('success');
+      const home = HOME_FOR_ROLE[account.role];
+      if (prefersReducedMotion()) navigate(home, { replace: true });
+      else window.setTimeout(() => navigate(home, { replace: true }), 900);
+    } catch (err) {
+      setPhase('idle');
+      reject(err instanceof ApiError
+        ? (err.message || 'Unable to sign in with Google.')
         : 'Unable to reach the server. Is the backend running on port 8080?');
     }
   }
@@ -172,15 +191,7 @@ export default function Login() {
           <span className="h-px flex-1 bg-white/10" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <SocialButton label="Google" icon={<GoogleIcon />} />
-          <SocialButton label="Apple" icon={<AppleIcon />} />
-        </div>
-        {/* Stated plainly rather than left to a dead button: this ERP
-            authenticates against institution-issued accounts only. */}
-        <p className="mt-3 text-center text-xs text-slate-500">
-          Social sign-in is not enabled for institution accounts.
-        </p>
+        <GoogleButton onCredential={handleGoogleCredential} />
       </Stagger>
 
       <Stagger step={7}>
@@ -198,40 +209,3 @@ export default function Login() {
   );
 }
 
-/**
- * Rendered because the design calls for it, but disabled: this deployment has no
- * OAuth provider, and a button that looks live and silently does nothing is
- * worse than one that says so.
- */
-function SocialButton({ label, icon }: { label: string; icon: ReactNode }) {
-  return (
-    <button
-      type="button"
-      disabled
-      title={`${label} sign-in is not available for institution accounts`}
-      className="flex h-12 cursor-not-allowed items-center justify-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-medium text-slate-400 opacity-60"
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden>
-      <path fill="currentColor" d="M21.35 11.1H12v2.98h5.35a4.6 4.6 0 0 1-1.99 3.02v2.5h3.22c1.88-1.73 2.96-4.29 2.96-7.32 0-.7-.06-1.37-.19-2.02Z" />
-      <path fill="currentColor" d="M12 22c2.7 0 4.96-.9 6.61-2.4l-3.22-2.5c-.9.6-2.05.95-3.39.95-2.6 0-4.8-1.76-5.59-4.12H3.08v2.59A10 10 0 0 0 12 22Z" opacity=".75" />
-      <path fill="currentColor" d="M6.41 13.93a5.99 5.99 0 0 1 0-3.85V7.49H3.08a10 10 0 0 0 0 9.02l3.33-2.58Z" opacity=".55" />
-      <path fill="currentColor" d="M12 5.98c1.47 0 2.79.5 3.83 1.5l2.85-2.85C16.95 2.99 14.7 2 12 2a10 10 0 0 0-8.92 5.49l3.33 2.59C7.2 7.74 9.4 5.98 12 5.98Z" opacity=".9" />
-    </svg>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M16.36 12.78c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.61-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.75-.78-2.87-.76-1.48.02-2.84.86-3.6 2.18-1.53 2.66-.39 6.6 1.1 8.76.73 1.06 1.6 2.25 2.74 2.2 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.14.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.32-3.5ZM14.2 6.3c.6-.74 1.01-1.76.9-2.78-.87.04-1.93.58-2.56 1.31-.56.65-1.05 1.7-.92 2.7.97.08 1.97-.49 2.58-1.23Z" />
-    </svg>
-  );
-}

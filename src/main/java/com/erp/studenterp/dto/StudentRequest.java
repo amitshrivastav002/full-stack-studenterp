@@ -59,6 +59,7 @@ public class StudentRequest {
     @Max(value = 8, message = "Semester cannot exceed 8")
     private Integer semester;
 
+    @NotBlank(message = "Section is required")
     private String section;
 
     @NotNull(message = "Department is required")
