@@ -45,6 +45,12 @@ export function GoogleButton({ onCredential }: { onCredential: (idToken: string)
   const container = useRef<HTMLDivElement>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
+  // Kept in a ref so the effect below doesn't depend on `onCredential` — an
+  // inline callback prop gets a new identity every render, and re-running the
+  // effect would call google.accounts.id.initialize() again each time.
+  const onCredentialRef = useRef(onCredential);
+  onCredentialRef.current = onCredential;
+
   useEffect(() => {
     if (!clientId || !container.current) return;
     let cancelled = false;
@@ -53,7 +59,7 @@ export function GoogleButton({ onCredential }: { onCredential: (idToken: string)
       if (cancelled || !container.current || !window.google) return;
       window.google.accounts.id.initialize({
         client_id: clientId,
-        callback: (response) => onCredential(response.credential),
+        callback: (response) => onCredentialRef.current(response.credential),
       });
       window.google.accounts.id.renderButton(container.current, {
         theme: 'outline',
@@ -64,7 +70,7 @@ export function GoogleButton({ onCredential }: { onCredential: (idToken: string)
     });
 
     return () => { cancelled = true; };
-  }, [clientId, onCredential]);
+  }, [clientId]);
 
   if (!clientId) {
     return (
