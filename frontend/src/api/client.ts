@@ -1,5 +1,14 @@
 const TOKEN_KEY = 'erp.token';
 
+// In dev, Vite's proxy forwards relative /api calls to the backend. In
+// production the frontend and backend are separate deployments, so the
+// backend's URL must be supplied at build time via VITE_API_BASE_URL.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') ?? '';
+
+function withBase(path: string): string {
+  return `${API_BASE}${path}`;
+}
+
 export class ApiError extends Error {
   status: number;
   /** Field-level messages from GlobalExceptionHandler on a 400. */
@@ -92,7 +101,8 @@ async function handle<T>(res: Response): Promise<T> {
 type Query = Record<string, string | number | boolean | undefined | null>;
 
 function withQuery(path: string, query?: Query): string {
-  if (!query) return path;
+  const base = withBase(path);
+  if (!query) return base;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined && value !== null && value !== '') {
@@ -100,7 +110,7 @@ function withQuery(path: string, query?: Query): string {
     }
   }
   const qs = params.toString();
-  return qs ? `${path}?${qs}` : path;
+  return qs ? `${base}?${qs}` : base;
 }
 
 export const api = {
@@ -147,7 +157,7 @@ export const api = {
    * The caller owns the URL and must revoke it.
    */
   async objectUrl(path: string): Promise<string | null> {
-    const res = await fetch(path, { headers: authHeaders() });
+    const res = await fetch(withBase(path), { headers: authHeaders() });
     if (res.status === 404) return null;
     if (!res.ok) {
       if (res.status === 401) signalUnauthorized();
@@ -158,7 +168,7 @@ export const api = {
 
   /** Fetches a binary response and hands it to the browser as a download. */
   async download(path: string, fallbackName: string): Promise<void> {
-    const res = await fetch(path, { headers: authHeaders() });
+    const res = await fetch(withBase(path), { headers: authHeaders() });
     if (!res.ok) {
       if (res.status === 401) signalUnauthorized();
       throw await toApiError(res);
