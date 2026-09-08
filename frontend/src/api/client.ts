@@ -3,7 +3,7 @@ const TOKEN_KEY = 'erp.token';
 // In dev, Vite's proxy forwards relative /api calls to the backend. In
 // production the frontend and backend are separate deployments, so the
 // backend's URL must be supplied at build time via VITE_API_BASE_URL.
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, '') ?? '';
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') ?? '';
 
 function withBase(path: string): string {
   return `${API_BASE}${path}`;
