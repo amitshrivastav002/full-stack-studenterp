@@ -12,6 +12,7 @@ import type {
   RazorpayStatusResponse, RegisterRequest, SignupRequest,
   StudentAttendanceSummary, StudentDocumentResponse,
   StudentExamResultResponse, StudentFeeDashboardResponse, StudentFeeResponse,
+  StudentAccountRequest,
   StudentLeaveRequest, StudentLeaveResponse, StudentMarkRequest,
   StudentRazorpayVerificationRequest,
   StudentMarkResponse, StudentRequest, StudentResponse, SubjectRequest,
@@ -62,6 +63,8 @@ export const students = {
     form.append('file', file);
     return api.upload<StudentResponse>(`/api/students/${id}/photo`, form);
   },
+  createAccount: (body: StudentAccountRequest) =>
+    api.post<string>('/api/admin/student-accounts', body),
 };
 
 export const documents = {
@@ -161,6 +164,10 @@ export const fees = {
   assign: (studentId: number, feeStructureId: number) =>
     api.post<StudentFeeResponse>(
       `/api/admin/fees/students/${studentId}/assign`, undefined, { feeStructureId },
+    ),
+  assignToClass: (feeStructureId: number) =>
+    api.post<StudentFeeResponse[]>(
+      `/api/admin/fees/structures/${feeStructureId}/assign-class`,
     ),
   studentFees: (studentId: number) =>
     api.get<StudentFeeResponse[]>(`/api/admin/fees/students/${studentId}`),

@@ -172,6 +172,12 @@ export interface FacultyAccountRequest {
   password: string;
 }
 
+export interface StudentAccountRequest {
+  studentId: number;
+  email: string;
+  password: string;
+}
+
 // ---------------- academic structure ----------------
 
 export interface Department {

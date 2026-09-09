@@ -326,6 +326,37 @@ public FeePaymentResponse makePayment(
 
 
     // ==========================================
+    // ASSIGN FEE TO WHOLE CLASS (course + semester)
+    // ==========================================
+
+    /**
+     * Assigns a fee structure to every active student in its course and
+     * semester, regardless of section. Students who already have the
+     * structure are skipped by {@link #assignFee}, so this is safe to run
+     * more than once (e.g. after new students join the class).
+     */
+    @Transactional
+    public List<StudentFeeResponse> assignFeeToClass(Long feeStructureId) {
+
+        FeeStructure structure = feeStructureRepository
+                .findByIdAndActiveTrue(feeStructureId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Fee structure not found"
+                        )
+                );
+
+        return studentRepository
+                .findByCourseIdAndSemesterAndActiveTrue(
+                        structure.getCourse().getId(),
+                        structure.getSemester()
+                )
+                .stream()
+                .map(student -> assignFee(student.getId(), feeStructureId))
+                .toList();
+    }
+
+    // ==========================================
     // GET STUDENT FEES
     // ==========================================
 

@@ -65,6 +65,20 @@ public class AdminFeeController {
     }
 
 
+    // Assign fee to every active student in the structure's course + semester
+
+    @PostMapping(
+            "/structures/{feeStructureId}/assign-class"
+    )
+    public List<StudentFeeResponse> assignFeeToClass(
+            @PathVariable Long feeStructureId) {
+
+        return feeService.assignFeeToClass(
+                feeStructureId
+        );
+    }
+
+
     // Get student fees
 
     @GetMapping(

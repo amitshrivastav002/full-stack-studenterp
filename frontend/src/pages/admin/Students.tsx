@@ -37,6 +37,7 @@ export default function AdminStudents() {
   const [editing, setEditing] = useState<StudentResponse | null>(null);
   const [creating, setCreating] = useState(false);
   const [docsFor, setDocsFor] = useState<StudentResponse | null>(null);
+  const [accountFor, setAccountFor] = useState<StudentResponse | null>(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
@@ -183,6 +184,13 @@ export default function AdminStudents() {
                       >
                         Documents
                       </Button>
+                      <Button
+                        variant="secondary"
+                        className="px-2 py-1 text-xs"
+                        onClick={() => setAccountFor(student)}
+                      >
+                        Login
+                      </Button>
                       <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">
                         Photo
                         <input
@@ -247,7 +255,88 @@ export default function AdminStudents() {
         student={docsFor}
         onClose={() => setDocsFor(null)}
       />
+
+      <AccountModal
+        student={accountFor}
+        onClose={() => setAccountFor(null)}
+        onSaved={(message) => { setNotice(message); setAccountFor(null); }}
+      />
     </>
+  );
+}
+
+function AccountModal({ student, onClose, onSaved }: {
+  student: StudentResponse | null;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const [email, setEmail] = useState(student?.email ?? '');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!student) return;
+
+    setBusy(true);
+    setError('');
+    try {
+      await studentsApi.createAccount({ studentId: student.id, email, password });
+      onSaved(`Login created for ${email}.`);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={student !== null}
+      title="Create portal login"
+      onClose={onClose}
+    >
+      {student && (
+        <form onSubmit={submit} className="space-y-4">
+          {error && <Alert onDismiss={() => setError('')}>{error}</Alert>}
+
+          <p className="text-sm text-slate-500">
+            Issues a STUDENT account for{' '}
+            <span className="font-medium text-slate-900">
+              {fullName(student.firstName, student.lastName)}
+            </span>{' '}
+            ({student.enrollmentNumber}) and links it to this record.
+          </p>
+
+          <Field label="Login email" required>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </Field>
+
+          <Field label="Password" required hint="At least 8 characters.">
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              required
+            />
+          </Field>
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={busy}>
+              {busy ? 'Creating…' : 'Create login'}
+            </Button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }
 

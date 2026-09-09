@@ -67,6 +67,19 @@ function StructuresTab() {
 
   const [open, setOpen] = useState(false);
   const [notice, setNotice] = useState('');
+  const [assigningId, setAssigningId] = useState<number | null>(null);
+
+  async function assignToClass(feeStructureId: number) {
+    setAssigningId(feeStructureId);
+    try {
+      const assigned = await feesApi.assignToClass(feeStructureId);
+      setNotice(`Fee assigned to ${assigned.length} student(s) in this course & semester.`);
+    } catch (err) {
+      setNotice(errorMessage(err));
+    } finally {
+      setAssigningId(null);
+    }
+  }
 
   return (
     <>
@@ -89,7 +102,7 @@ function StructuresTab() {
             hint="Define a structure before assigning fees to students."
           />
         ) : (
-          <Table head={['ID', 'Course', 'Semester', 'Type', 'Amount', 'Academic year', 'Status']}>
+          <Table head={['ID', 'Course', 'Semester', 'Type', 'Amount', 'Academic year', 'Status', 'Actions']}>
             {list.data!.map((row) => (
               <tr key={row.id}>
                 <Td className="tabular-nums text-slate-400">{row.id}</Td>
@@ -102,6 +115,16 @@ function StructuresTab() {
                   <Badge tone={row.active ? 'green' : 'slate'}>
                     {row.active ? 'Active' : 'Inactive'}
                   </Badge>
+                </Td>
+                <Td>
+                  <Button
+                    variant="secondary"
+                    className="px-2 py-1 text-xs"
+                    disabled={assigningId === row.id}
+                    onClick={() => assignToClass(row.id)}
+                  >
+                    {assigningId === row.id ? 'Assigning…' : 'Assign to class'}
+                  </Button>
                 </Td>
               </tr>
             ))}

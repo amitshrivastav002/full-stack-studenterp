@@ -1,9 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { HOME_FOR_ROLE, useAuth } from './context/AuthContext';
 import { Layout } from './components/Layout';
 import type { NavItem } from './components/Layout';
 import type { Role } from './api/types';
+import { Spinner } from './components/ui';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -12,38 +14,46 @@ import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 import Notices from './pages/Notices';
 
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminStudents from './pages/admin/Students';
-import AdminFaculty from './pages/admin/Faculty';
-import AdminAcademics from './pages/admin/Academics';
-import AdminSubjects from './pages/admin/Subjects';
-import AdminAssignments from './pages/admin/Assignments';
-import AdminTimetable from './pages/admin/Timetable';
-import AdminExams from './pages/admin/Exams';
-import AdminFees from './pages/admin/Fees';
-import AdminLeaves from './pages/admin/Leaves';
-import AdminNotices from './pages/admin/Notices';
-import AdminLibrary from './pages/admin/Library';
-import AdminHostel from './pages/admin/Hostel';
-import AdminTransport from './pages/admin/Transport';
-import AdminUsers from './pages/admin/Users';
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const AdminStudents = lazy(() => import('./pages/admin/Students'));
+const AdminFaculty = lazy(() => import('./pages/admin/Faculty'));
+const AdminAcademics = lazy(() => import('./pages/admin/Academics'));
+const AdminSubjects = lazy(() => import('./pages/admin/Subjects'));
+const AdminAssignments = lazy(() => import('./pages/admin/Assignments'));
+const AdminTimetable = lazy(() => import('./pages/admin/Timetable'));
+const AdminExams = lazy(() => import('./pages/admin/Exams'));
+const AdminFees = lazy(() => import('./pages/admin/Fees'));
+const AdminLeaves = lazy(() => import('./pages/admin/Leaves'));
+const AdminNotices = lazy(() => import('./pages/admin/Notices'));
+const AdminLibrary = lazy(() => import('./pages/admin/Library'));
+const AdminHostel = lazy(() => import('./pages/admin/Hostel'));
+const AdminTransport = lazy(() => import('./pages/admin/Transport'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminAttendance = lazy(() => import('./pages/admin/Attendance'));
 
-import FacultyDashboard from './pages/faculty/Dashboard';
-import FacultyAttendance from './pages/faculty/Attendance';
-import FacultyTimetable from './pages/faculty/Timetable';
-import FacultyLeaves from './pages/faculty/Leaves';
-import FacultyAssignments from './pages/faculty/Assignments';
+const FacultyDashboard = lazy(() => import('./pages/faculty/Dashboard'));
+const FacultyAttendance = lazy(() => import('./pages/faculty/Attendance'));
+const FacultyTimetable = lazy(() => import('./pages/faculty/Timetable'));
+const FacultyLeaves = lazy(() => import('./pages/faculty/Leaves'));
+const FacultyAssignments = lazy(() => import('./pages/faculty/Assignments'));
 
-import AdminAttendance from './pages/admin/Attendance';
-import StudentDashboard from './pages/student/Dashboard';
-import StudentAssignments from './pages/student/Assignments';
-import StudentLibrary from './pages/student/Library';
-import StudentCampus from './pages/student/Campus';
-import StudentAttendance from './pages/student/Attendance';
-import StudentResults from './pages/student/Results';
-import StudentTimetable from './pages/student/Timetable';
-import StudentFees from './pages/student/Fees';
-import StudentLeaves from './pages/student/Leaves';
+const StudentDashboard = lazy(() => import('./pages/student/Dashboard'));
+const StudentAssignments = lazy(() => import('./pages/student/Assignments'));
+const StudentLibrary = lazy(() => import('./pages/student/Library'));
+const StudentCampus = lazy(() => import('./pages/student/Campus'));
+const StudentAttendance = lazy(() => import('./pages/student/Attendance'));
+const StudentResults = lazy(() => import('./pages/student/Results'));
+const StudentTimetable = lazy(() => import('./pages/student/Timetable'));
+const StudentFees = lazy(() => import('./pages/student/Fees'));
+const StudentLeaves = lazy(() => import('./pages/student/Leaves'));
+
+function PageFallback() {
+  return (
+    <div className="flex justify-center py-12">
+      <Spinner />
+    </div>
+  );
+}
 
 function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
   const { session } = useAuth();
@@ -104,6 +114,7 @@ const STUDENT_NAV: NavItem[] = [
 
 export default function App() {
   return (
+    <Suspense fallback={<PageFallback />}>
     <Routes>
       <Route path="/" element={<LandingRoute />} />
       <Route path="/login" element={<Login />} />
@@ -176,5 +187,6 @@ export default function App() {
 
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
